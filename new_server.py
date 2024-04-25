@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
@@ -90,6 +92,6 @@ def get_latest_plot():
         return jsonify({'message': 'No plots available'}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    app.run(debug=True, host='0.0.0.0', port=3000, threaded=True)
 
 
