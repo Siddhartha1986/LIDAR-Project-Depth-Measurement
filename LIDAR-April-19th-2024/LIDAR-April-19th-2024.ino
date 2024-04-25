@@ -83,7 +83,7 @@ bool parseDataPacket(const uint8_t *buffer, size_t len, LiDARMeasureDataType &me
 bool dataCollectionStarted = false;
 bool collectionComplete = false; // Flag to indicate the entire process is complete
 unsigned long dataStartTime = 0;
-const long collectionDuration = 2000; // 2 sec  data collection time
+const long collectionDuration = 2000; // 2 sec
 
 static uint32_t distanceSum[361] = {0};
 static uint16_t distanceCount[361] = {0};
@@ -261,20 +261,37 @@ void loop() {
     Serial.print(finalDepth, 2);
     Serial.println(" mm");
 
-    // Before marking the entire process as complete, reset arrays for potential future use
-    for (int i = 0; i < 361; i++) {
-      distanceSum[i] = 0;
-      distanceCount[i] = 0;
-      xCoordinates[i] = 0;
-      yCoordinates[i] = 0;
-      depths[i] = 0;
+    if (finalDepth <= 0) {  // Check if the depth is above a certain minimal threshold
+      Serial.println("Invalid depth detected. Resetting device...");
+      ESP.restart();  // Reset the device to start a new measurement cycle if depth is invalid
+    } else {
+      sendData(jsonData);  // Only send data if the depth is valid
+      markCollectionComplete();  // Function to reset and mark the process as complete
     }
+
     
-    Serial.println("Data collection and processing complete.");
-    dataCollectionStarted = false; // Ensure this doesn't trigger again
-    collectionComplete = true; // Prevent further operations
   }
 }
+
+
+
+// Function to reset and mark the process as complete
+
+void markCollectionComplete() {
+  // Reset all counters and states for the next possible run
+  for (int i = 0; i <= 360; i++) {
+    distanceSum[i] = 0;
+    distanceCount[i] = 0;
+    xCoordinates[i] = 0;
+    yCoordinates[i] = 0;
+    depths[i] = 0;
+  }
+  Serial.println("Data collection and processing complete.");
+  dataCollectionStarted = false;  // Reset data collection flag
+  collectionComplete = true;  // Set flag to prevent further processing
+}
+
+
 
 
 
