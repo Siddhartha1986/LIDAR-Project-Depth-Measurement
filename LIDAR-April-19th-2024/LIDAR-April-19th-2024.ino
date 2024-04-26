@@ -3,6 +3,8 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
+#define DEBUG_MODE 1   // Set to 1 for debugging, 0 for production
+
 HardwareSerial LidarSerial(2); // Use hardware serial port 2
 
 #define POINT_PER_PACK 12
@@ -92,30 +94,44 @@ static float yCoordinates[361] = {0};
 static float depths[361] = {0};
 
 void setup() {
-    // Start the Serial communication to output the status
-    Serial.begin(115200);
-    delay(100);   // Give time for the serial monitor to initialize
+    #ifdef DEBUG_MODE  
+      // Start the Serial communication to output the status
+      Serial.begin(115200);
+      delay(100);   // Give time for the serial monitor to initialize
+    #endif
     
     // Attempt to connect to WiFi
     WiFi.begin(ssid, password);
-    Serial.println("Attempting to connect to WiFi...");
+    #ifdef DEBUG_MODE
+      Serial.println("Attempting to connect to WiFi...");
+    #endif
+
     int connectionAttempts = 0;
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
-        Serial.print(".");
+      
+        #ifdef DEBUG_MODE  
+          Serial.print(".");
+        #endif
+
         connectionAttempts++;
         if (connectionAttempts >= 10) {  // Max attempts to connect
+              
+            #ifdef DEBUG_MODE  
               Serial.println("Failed to connect to WiFi, resetting...");
+            #endif
+
               ESP.restart(); // Resets the ESP32
-            //Serial.println("Failed to connect to WiFi. Please check your credentials or WiFi signal.");
-            //while(true) {
-                //delay(1000);  // Infinite loop to stop further execution
-            //}
+           
         }
     }
+
+  #ifdef DEBUG_MODE  
     Serial.println("\nConnected to WiFi");
     Serial.print("IP Address Assigned to the ESP32 by the network: ");
     Serial.println(WiFi.localIP()); // Print the local IP address
+  #endif
+
     
     // If connected, then start the Lidar
     LidarSerial.begin(230400, SERIAL_8N1, 16, -1); // Initialize LidarSerial with specified pins
@@ -140,12 +156,19 @@ void loop() {
   if (millis() - lastCheckTime >= checkInterval) {
     lastCheckTime = millis();
     if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("WiFi connection lost. Trying to reconnect...");
+      
+      #ifdef DEBUG_MODE  
+        Serial.println("WiFi connection lost. Trying to reconnect...");
+      #endif
+ 
       WiFi.disconnect();
       WiFi.reconnect();
       return;  // Skip further processing until WiFi is reconnected
     } else {
-      Serial.println("WiFi is still connected.");
+      #ifdef DEBUG_MODE 
+        Serial.println("WiFi is still connected.");
+      #endif
+
     }
   }
 
@@ -200,7 +223,10 @@ void loop() {
         jsonData += "{\"angle\": " + String(i) + ", \"distance\": " + String(avgDistance) + "}";
         isFirst = false;
         
-        Serial.print(i); Serial.print(", "); Serial.println(avgDistance, 2);
+        #ifdef DEBUG_MODE
+          Serial.print(i); Serial.print(", "); Serial.println(avgDistance, 2);
+        #endif
+
         float angleRadians = i * M_PI / 180.0; // Convert angle to radians
         xCoordinates[i] = avgDistance * sin(angleRadians);
         yCoordinates[i] = avgDistance * (-cos(angleRadians));
@@ -219,8 +245,13 @@ void loop() {
     for (int i = 0; i <= 360; i++) {
       if (distanceCount[i] > 0) {
         depths[i] = yCoordinates[i] - minY;
-        Serial.print("Angle: "); Serial.print(i);
-        Serial.print(", Depth: "); Serial.println(depths[i], 2);
+
+        #ifdef DEBUG_MODE
+          Serial.print("Angle: "); Serial.print(i);
+          Serial.print(", Depth: "); Serial.println(depths[i], 2);
+        #endif
+
+      
       }
     }
 
@@ -254,17 +285,23 @@ void loop() {
 
     jsonData += "], \"finalDepth\": " + String(finalDepth) + "}";
 
-    Serial.println(jsonData);  // Debug: Print JSON data to serial
-    sendData(jsonData);        // Send data to the server
+    #ifdef DEBUG_MODE    
+      Serial.print("Final depth value for the ditch is: ");
+      Serial.print(finalDepth, 2);
+      Serial.println(" mm");
+    #endif
 
-    Serial.print("Final depth value for the ditch is: ");
-    Serial.print(finalDepth, 2);
-    Serial.println(" mm");
 
     if (finalDepth <= 0) {  // Check if the depth is above a certain minimal threshold
-      Serial.println("Invalid depth detected. Resetting device...");
+      #ifdef DEBUG_MODE
+        Serial.println("Invalid depth detected. Resetting device...");
+      #endif
       ESP.restart();  // Reset the device to start a new measurement cycle if depth is invalid
     } else {
+      #ifdef DEBUG_MODE
+        Serial.println(jsonData);  // Debug: Print JSON data to serial
+      #endif
+
       sendData(jsonData);  // Only send data if the depth is valid
       markCollectionComplete();  // Function to reset and mark the process as complete
     }
@@ -286,9 +323,13 @@ void markCollectionComplete() {
     yCoordinates[i] = 0;
     depths[i] = 0;
   }
-  Serial.println("Data collection and processing complete.");
-  dataCollectionStarted = false;  // Reset data collection flag
-  collectionComplete = true;  // Set flag to prevent further processing
+  
+  #ifdef DEBUG_MODE
+    Serial.println("Data collection and processing complete.");
+  #endif
+
+    dataCollectionStarted = false;  // Reset data collection flag
+    collectionComplete = true;  // Set flag to prevent further processing
 }
 
 
@@ -306,14 +347,23 @@ void sendData(String jsonData) {
 
     if (httpResponseCode > 0) {
       String response = http.getString();
-      Serial.println("HTTP Response code: " + String(httpResponseCode));
-      Serial.println("Response: " + response);
+      #ifdef DEBUG_MODE
+        Serial.println("HTTP Response code: " + String(httpResponseCode));
+        Serial.println("Response: " + response);
+      #endif
+
     } else {
-      Serial.println("Error on sending POST: " + String(httpResponseCode));
+      #ifdef DEBUG_MODE
+        Serial.println("Error on sending POST: " + String(httpResponseCode));
+      #endif
+
     }
 
     http.end();
   } else {
-    Serial.println("WiFi Disconnected");
+    #ifdef DEBUG_MODE
+      Serial.println("WiFi Disconnected");
+    #endif
+
   }
 }
