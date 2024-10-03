@@ -2,7 +2,7 @@
 # LIDAR Project for Depth Measurement
 **Developed for Wizense LTD**
 
-This project was developed for Wizense LTD to measure and calculate the depth of ditches using LiDAR data.
+This project was developed for [Wizense LTD](https://wizense.com/) to measure and calculate the depth of ditches using LiDAR data.
 
 It consists of two main components:
 
