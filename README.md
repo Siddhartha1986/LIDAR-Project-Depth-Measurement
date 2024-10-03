@@ -1,7 +1,10 @@
 
 # LIDAR Project for Depth Measurement
+**Developed for Wizense LTD**
 
-This project involves using LiDAR data to measure and calculate the depth of a ditch. It consists of two main components:
+This project was developed for Wizense LTD to measure and calculate the depth of ditches using LiDAR data.
+
+It consists of two main components:
 
 1. **LiDAR Data Parsing and Calculation**: This part of the project is responsible for capturing LiDAR data, performing calculations, and transmitting the processed data to the server.
 2. **Server-Side Processing**: The server receives LiDAR data, processes it further, and plots the profile of the ditch.
