@@ -45,8 +45,8 @@ It consists of two main components:
    - Upload the Arduino code (`LATEST-TEST-30.07.2024.ino`) to the device.
 
 2. **Starting the Client**:
-   - Run `LIDAR_POSTION_CALCULATION.py` to start capturing and processing LiDAR data.
-   - Ensure the LiDAR device is properly connected and data is being transmitted.
+      - Ensure the LiDAR device is properly connected and data is being transmitted.
+      - The ESP32 device runs the uploaded Arduino code and starts capturing LiDAR data, performing initial calculations, and transmitting the processed values to the server.
 
 3. **Running the Server**:
    - Navigate to the `Server` folder.
